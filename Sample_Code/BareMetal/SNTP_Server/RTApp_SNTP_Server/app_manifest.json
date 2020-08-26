@@ -1,0 +1,12 @@
+{
+  "SchemaVersion": 1,
+  "Name": "RTApp_SNTP_Server",
+  "ComponentId": "bdb8c28f-0988-4b1a-94b1-17de09347526",
+  "EntryPoint": "/bin/app",
+  "CmdArgs": [],
+  "Capabilities": {
+    "SpiMaster": [ "ISU1" ],
+    "AllowedApplicationConnections": [ "0194a35c-6048-40dc-aa3c-371a79b03560" ]
+  },
+  "ApplicationType": "RealTimeCapable"
+}
