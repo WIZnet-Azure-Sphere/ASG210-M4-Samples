@@ -5,7 +5,8 @@
   "EntryPoint": "/bin/app",
   "CmdArgs": [],
   "Capabilities": {
-    "SpiMaster": [ "ISU1" ]
+    "SpiMaster": [ "ISU1" ],
+    "Gpio": [ 12, 15 ]
   },
   "ApplicationType": "RealTimeCapable"
 }

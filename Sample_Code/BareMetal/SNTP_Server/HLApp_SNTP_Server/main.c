@@ -163,7 +163,7 @@ static void SendTimeData(void)
     if (strftime(timeBuf, sizeof(timeBuf), "%Y-%m-%d %H:%M:%S", tm) == 0) {
         Log_Debug("ERROR: Time data get failed: %s\n", timeBuf);
     }
-    // Log_Debug("INFO: Time data: %s\n", timeBuf);
+    //  Log_Debug("INFO: Time data: %s\n", timeBuf);
 
     int bytesSent = send(sockFd, timeBuf, strlen(timeBuf), 0);
     if (bytesSent == -1) {
