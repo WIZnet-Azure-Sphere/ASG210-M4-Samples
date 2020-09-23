@@ -6,6 +6,7 @@
   "CmdArgs": [],
   "Capabilities": {
     "SpiMaster": [ "ISU1" ],
+    "Gpio": [ 12, 15 ],
     "AllowedApplicationConnections": [ "0194a35c-6048-40dc-aa3c-371a79b03560" ]
   },
   "ApplicationType": "RealTimeCapable"

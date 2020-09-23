@@ -90,12 +90,16 @@ uint8_t spim_rx_buf[SPIM_FULL_DUPLEX_MAX_LEN];
 static volatile int g_async_done_flag;
 
 // Default Static Network Configuration for TCP Server //
-wiz_NetInfo gWIZNETINFO = {{0x00, 0x08, 0xdc, 0xff, 0xfa, 0xfb},
-                           {192, 168, 50, 1},
-                           {255, 255, 255, 0},
-                           {192, 168, 50, 1},
-                           {8, 8, 8, 8},
-                           NETINFO_STATIC};
+#if 0
+ wiz_NetInfo gWIZNETINFO = { {0x00, 0x08, 0xdc, 0xff, 0xfa, 0xfb},
+                            {192, 168, 50, 10},
+                            {255, 255, 255, 0},
+                            {192, 168, 50, 1},
+                            {8, 8, 8, 8},
+                            NETINFO_STATIC };
+#else
+wiz_NetInfo gWIZNETINFO = {};
+#endif
 
 #define USE_READ_SYSRAM
 #ifdef USE_READ_SYSRAM
@@ -107,6 +111,10 @@ uint8_t s1_Buf[2048];
 uint8_t s2_Buf[2048];
 uint8_t gDATABUF[DATA_BUF_SIZE];
 #endif
+
+/* GPIO */
+static const uint8_t gpio_w5500_reset = OS_HAL_GPIO_12;
+static const uint8_t gpio_w5500_ready = OS_HAL_GPIO_15;
 
 #define _MAIN_DEBUG_
 
@@ -125,6 +133,60 @@ void _putchar(char character)
 /* Functions */
 /******************************************************************************/
 
+static int gpio_output(u8 gpio_no, u8 level)
+{
+    int ret;
+
+    ret = mtk_os_hal_gpio_request(gpio_no);
+    if (ret != 0) {
+        printf("request gpio[%d] fail\n", gpio_no);
+        return ret;
+    }
+
+    mtk_os_hal_gpio_set_direction(gpio_no, OS_HAL_GPIO_DIR_OUTPUT);
+    mtk_os_hal_gpio_set_output(gpio_no, level);
+    ret = mtk_os_hal_gpio_free(gpio_no);
+    if (ret != 0) {
+        printf("free gpio[%d] fail\n", gpio_no);
+        return 0;
+    }
+    return 0;
+}
+
+static int gpio_input(u8 gpio_no, os_hal_gpio_data* pvalue)
+{
+    u8 ret;
+
+    ret = mtk_os_hal_gpio_request(gpio_no);
+    if (ret != 0) {
+        printf("request gpio[%d] fail\n", gpio_no);
+        return ret;
+    }
+    mtk_os_hal_gpio_set_direction(gpio_no, OS_HAL_GPIO_DIR_INPUT);
+    mtk_os_hal_gpio_get_input(gpio_no, pvalue);
+    ret = mtk_os_hal_gpio_free(gpio_no);
+    if (ret != 0) {
+        printf("free gpio[%d] fail\n", gpio_no);
+        return ret;
+    }
+    return 0;
+}
+
+void w5500_init() {
+    // W5500 reset
+    gpio_output(gpio_w5500_reset, OS_HAL_GPIO_DATA_HIGH);
+
+    // W5500 ready check
+    os_hal_gpio_data w5500_ready;
+    gpio_input(gpio_w5500_ready, &w5500_ready);
+
+    while (1) {
+        if (w5500_ready) break;
+    }
+
+    osai_delay_ms(50);
+}
+
 // check w5500 network setting
 void InitPrivateNetInfo(void)
 {
@@ -132,10 +194,11 @@ void InitPrivateNetInfo(void)
     uint8_t i = 0;
     ctlwizchip(CW_GET_ID, (void *)tmpstr);
 
-    if (ctlnetwork(CN_SET_NETINFO, (void *)&gWIZNETINFO) < 0)
-    {
+#if 0
+    if (ctlnetwork(CN_SET_NETINFO, (void *)&gWIZNETINFO) < 0) {
         printf("ERROR: ctlnetwork SET\r\n");
     }
+#endif
 
     memset((void *)&gWIZNETINFO, 0, sizeof(gWIZNETINFO));
 
@@ -174,8 +237,11 @@ _Noreturn void RTCoreMain(void)
     mtk_os_hal_spim_ctlr_init(spi_master_port_num);
 
     printf("-------------------------------------------\r\n");
-    printf(" ASG200_DHCP_Server_RTApp_MT3620_BareMetal \r\n");
+    printf(" ASG210_DHCP_Server_RTApp_MT3620_BareMetal \r\n");
     printf(" App built on: " __DATE__ " " __TIME__ "\r\n");
+
+     /* Init W5500 */
+    w5500_init();
 
     /* Init W5500 network */
     InitPrivateNetInfo();
