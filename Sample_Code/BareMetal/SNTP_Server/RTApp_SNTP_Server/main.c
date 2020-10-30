@@ -368,15 +368,17 @@ void mbox_send_data_a7(uint8_t* sock_data, uint32_t datasize)
 
 void mbox_receive_data(void)
 {
-    uint8_t result;
+    int8_t result = -1;
     uint32_t buf_len;
 
     memset(mbox_recv_buf, 0, MBOX_BUFFER_LEN_MAX);
 
-    /* Read from A7, dequeue from mailbox */
-    result = DequeueData(outbound, inbound, mbox_shared_buf_size, mbox_recv_buf, &buf_len);
-    if (result == -1 || buf_len < pay_load_start_offset) {
-        printf("Mailbox dequeue failed!\n");
+    while (result == -1) {
+        /* Read from A7, dequeue from mailbox */
+        result = DequeueData(outbound, inbound, mbox_shared_buf_size, mbox_recv_buf, &buf_len);
+        if (result == -1 || buf_len < pay_load_start_offset) {
+            printf("Mailbox dequeue failed!\n");
+        }
     }
     mbox_get_payload(mbox_recv_buf, buf_len);
 }
